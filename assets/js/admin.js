@@ -16,7 +16,7 @@
     try {
       const j = await call({ action: 'list', key: KEY });
       if (!j.ok) { sessionStorage.removeItem('dl_admin'); show(false); msg(j.error, 'err'); return; }
-      DATA = j; sessionStorage.setItem('dl_admin', KEY); show(true); $('#sheet').href = j.sheetUrl;
+      DATA = j; sessionStorage.setItem('dl_admin', KEY); show(true); $('#sheet').href = j.sheetUrl; if ($('#prices')) $('#prices').href = j.sheetUrl;
       $('#fst').innerHTML = ['All'].concat(j.statuses).map((s) => `<option>${s}</option>`).join('');
       $('#fst').value = filt; render(); msg('Updated ' + new Date().toLocaleTimeString());
     } catch (e) { msg('Could not reach the server. Check your internet connection.', 'err'); }

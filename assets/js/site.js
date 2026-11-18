@@ -3,13 +3,19 @@
   const D = window.DL, C = D.company, $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const icon = (n, c = 'ico') => `<svg class="${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${D.icons[n] || ''}</svg>`;
   const nu = (v) => 'Nu ' + Number(v).toLocaleString('en-IN');
-  const byId = Object.fromEntries(D.items.map((i) => [i.id, i]));
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  let byId = {};
+  const applyItems = (items) => { D.items = items; byId = Object.fromEntries(items.map((i) => [i.id, i])); };
+  D.items.forEach((i) => { i.cat = D.cats[i.cat] || i.cat; });   // categories by display name (same as the live price list)
+  applyItems(D.items);
+  try { const c = JSON.parse(localStorage.getItem('dl_catalog') || 'null'); if (c && c.items && c.items.length) applyItems(c.items); } catch (e) { /* ignore */ }
   window.dlIcon = icon;
 
   // icons placed in markup: <i data-i="phone"></i>
   $$('[data-i]').forEach((el) => { el.outerHTML = icon(el.dataset.i, el.className || 'ico'); });
   // prices placed in markup: <span data-price="E04"></span>
-  $$('[data-price]').forEach((el) => { const it = byId[el.dataset.price]; if (it) el.textContent = it.price ? nu(it.price) : 'On request'; });
+  const fillPrices = () => $$('[data-price]').forEach((el) => { const it = byId[el.dataset.price]; if (it) el.textContent = it.price ? nu(it.price) : 'On request'; });
+  fillPrices();
 
   // mobile menu
   const mb = $('.menu-btn'); if (mb) mb.onclick = () => $('nav.main').classList.toggle('open');
@@ -128,22 +134,33 @@
   const M = $('#market');
   if (M) {
     let cat = new URLSearchParams(location.search).get('cat') || 'all', qs = '', sort = 'feat';
-    $('#filters').innerHTML = `<button data-c="all">All</button>` + Object.entries(D.cats).map(([k, v]) => `<button data-c="${k}">${v}</button>`).join('');
+    const buildFilters = () => { $('#filters').innerHTML = `<button data-c="all">All</button>` + [...new Set(D.items.map((i) => i.cat))].map((v) => `<button data-c="${esc(v)}">${esc(v)}</button>`).join(''); };
+    buildFilters();
     const draw = () => {
       $$('#filters button').forEach((b) => b.classList.toggle('on', b.dataset.c === cat));
-      let list = D.items.filter((i) => (cat === 'all' || i.cat === cat) && (i.name + i.desc + D.cats[i.cat]).toLowerCase().includes(qs));
+      let list = D.items.filter((i) => (cat === 'all' || i.cat === cat) && (i.name + i.desc + i.cat).toLowerCase().includes(qs));
       if (sort === 'lo') list = list.slice().sort((a, b) => (a.price || 1e12) - (b.price || 1e12));
       if (sort === 'hi') list = list.slice().sort((a, b) => b.price - a.price);
       $('#count').textContent = `${list.length} item${list.length === 1 ? '' : 's'}`;
-      M.innerHTML = list.map((i) => `<article class="card prod"><div class="ic">${icon(i.icon)}</div><div class="cat">${D.cats[i.cat]}</div>
-        <h3>${i.name}</h3><p>${i.desc}</p><div class="price">${i.price ? nu(i.price) : 'Price on request'}</div><div class="unit">${i.price ? i.unit + '  ·  excl. taxes' : 'landed cost + handling'}</div>
+      M.innerHTML = list.map((i) => `<article class="card prod"><div class="ic">${icon(D.icons[i.icon] ? i.icon : 'layers')}</div><div class="cat">${esc(i.cat)}</div>
+        <h3>${esc(i.name)}</h3><p>${esc(i.desc)}</p><div class="price">${i.price ? nu(i.price) : 'Price on request'}</div><div class="unit">${i.price ? esc(i.unit) + '  ·  excl. taxes' : 'quoted on request'}</div>
         <div class="acts"><div class="qty"><button type="button" onclick="const n=this.nextElementSibling;n.value=Math.max(1,(+n.value||1)-1)">${icon('minus')}</button><input value="1" inputmode="numeric" aria-label="Quantity"><button type="button" onclick="const n=this.previousElementSibling;n.value=(+n.value||1)+1">${icon('plus')}</button></div>
-        <button class="btn sm" data-add="${i.id}">${icon('bag')} Add</button><button class="btn sm line" data-add="${i.id}" data-buy>Enquire now</button></div></article>`).join('') || '<p>No items match. Try another word.</p>';
+        <button class="btn sm" data-add="${esc(i.id)}">${icon('bag')} Add</button><button class="btn sm line" data-add="${esc(i.id)}" data-buy>Enquire now</button></div></article>`).join('') || '<p>No items match. Try another word.</p>';
     };
+    window.dlRedraw = () => { buildFilters(); draw(); };
     $('#filters').onclick = (e) => { const b = e.target.closest('button'); if (b) { cat = b.dataset.c; draw(); } };
     $('#q').oninput = (e) => { qs = e.target.value.toLowerCase(); draw(); };
     $('#sort').onchange = (e) => { sort = e.target.value; draw(); };
     draw();
   }
   paint();
+
+  // ---------------- live prices from the backend price list (Google Sheet "Price List") ----------------
+  if (C.api) {
+    fetch(C.api + '?action=catalog', { cache: 'no-store' }).then((r) => r.json()).then((j) => {
+      if (!j.ok || !j.items || !j.items.length) return;
+      localStorage.setItem('dl_catalog', JSON.stringify(j));
+      applyItems(j.items); fillPrices(); if (window.dlRedraw) window.dlRedraw(); paint();
+    }).catch(() => { /* keep built-in prices */ });
+  }
 })();
