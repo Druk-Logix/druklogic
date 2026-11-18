@@ -209,3 +209,24 @@ footer .base{border-top:1px solid rgba(216,182,106,.2);margin-top:56px;padding-t
 @media(max-width:760px){.deliv{grid-template-columns:1fr}}
 .reveal{opacity:0;transform:translateY(18px);transition:opacity .8s,transform .8s}.reveal.in{opacity:1;transform:none}
 @media print{header.site,.topbar,.drawer,.toast{display:none}}
+.result{font-size:.92rem;line-height:1.5}.result:empty{display:none}
+.result.busy{color:var(--stone)}.result.ok{background:#EEF5EF;border-left:2px solid var(--ok);padding:14px 16px;color:#1f4d33}
+.result.err{background:#FBEFEC;border-left:2px solid #B3261E;padding:14px 16px;color:#7a1a14}
+form.q .result{grid-column:1/-1}
+button:disabled{opacity:.55;cursor:wait}
+/* admin */
+.adm-top{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:26px 0}
+.adm-top input,.adm-top select{width:auto;margin:0;background:#fff}
+.kpi{display:grid;grid-template-columns:repeat(6,1fr);gap:0;border:1px solid var(--line);background:#fff;margin-bottom:22px}
+.kpi div{padding:18px;border-right:1px solid var(--line)}.kpi div:last-child{border-right:0}
+.kpi b{display:block;font:500 2rem var(--serif);color:var(--maroon)}.kpi span{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--stone)}
+.tbl{overflow:auto;background:#fff;border:1px solid var(--line)}
+.tbl table{width:100%;border-collapse:collapse;font-size:.86rem}
+.tbl th{font:500 .66rem var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--stone);text-align:left;padding:12px;border-bottom:1px solid var(--ink);white-space:nowrap;position:sticky;top:0;background:#fff}
+.tbl td{padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl td select{margin:0;padding:6px;width:auto;font-size:.8rem}
+.tbl tr.open td{background:var(--ivory)}
+.tbl .det{white-space:pre-wrap;color:var(--muted);font-size:.84rem}
+.st{display:inline-block;font:500 .64rem var(--sans);letter-spacing:.14em;text-transform:uppercase;padding:4px 8px;border:1px solid var(--line)}
+.st.New{border-color:var(--gold);color:var(--gold)}.st.Won{border-color:var(--ok);color:var(--ok)}
+@media(max-width:860px){.kpi{grid-template-columns:repeat(3,1fr)}}

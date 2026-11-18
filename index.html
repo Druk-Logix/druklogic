@@ -84,11 +84,13 @@
 <div><i data-i="pin" class="ico"></i><span><b>Office</b>122 Jangchub Lam SE, Gelephu, Bhutan</span></div>
 <div><i data-i="globe" class="ico"></i><span><b>Website</b>arunsanyasi2786.github.io/druklogic</span></div></div>
 <form class="q" data-enquiry><label>Name<input name="name" required></label><label>Organisation<input name="org"></label>
-<label>Phone / WhatsApp<input name="phone" required></label><label>Email<input name="email" type="email"></label>
+<label>Phone / WhatsApp<input name="phone" required inputmode="tel" pattern="[0-9+ ]{7,20}" title="Digits only, e.g. +975 1791 4131"></label><label>Email<input name="email" type="email"></label>
+<input name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
 <label class="full">Service<select name="service"><option>General enquiry</option><option>PLC Logic & Programming</option><option>SCADA & HMI</option><option>Control Panels</option><option>Simulation & Dry-Run</option><option>Costing & Analysis</option><option>Procurement</option><option>Commissioning</option><option>AMC & Support</option><option>IIoT & Remote Monitoring</option><option>Digital Twin</option><option>AI & Machine Learning</option><option>Training & Workshops</option></select></label>
 <label class="full">Site location<input name="site"></label><label class="full">Message<textarea name="msg" placeholder="What would you like to automate, monitor or fix?"></textarea></label>
-<div class="full send"><button class="btn" data-via="mail" type="submit"><i data-i="mail" class="ico"></i> Send by email</button><button class="btn gold" data-via="wa" type="submit"><i data-i="chat" class="ico"></i> Send on WhatsApp</button></div>
-<p class="full note">Your message opens in your own email app or WhatsApp, addressed to Arun Sanyasi. Nothing is stored on this website.</p></form></div></div></section>
+<div class="full send"><button class="btn" data-via="save" type="submit"><i data-i="check" class="ico"></i> Submit enquiry</button><button class="btn line" data-via="wa" type="submit"><i data-i="chat" class="ico"></i> Submit + WhatsApp</button><button class="btn line" data-via="mail" type="submit"><i data-i="mail" class="ico"></i> Submit + Email</button></div>
+<div class="result" aria-live="polite"></div>
+<p class="full note">Your enquiry is saved securely and Arun Sanyasi is notified at once. We use your details only to reply to this enquiry.</p></form></div></div></section>
 <footer><div class="wrap"><div class="cols">
 <div><a class="logo" href="index.html"><img src="assets/img/logo-reverse.svg" alt="Druk Logic & Engineering Solutions" style="background:transparent"></a>
 <p style="color:#CDBBA7">Industrial automation engineered in Bhutan: PLC, SCADA, control panels, IIoT, digital twins and AI. Every program is simulated and dry-run tested before it reaches your plant.</p></div>

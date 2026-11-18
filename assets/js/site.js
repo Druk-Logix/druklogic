@@ -36,12 +36,14 @@
     <form id="dform">
       <label>Your name<input name="name" required></label>
       <label>Organisation<input name="org"></label>
-      <label>Phone / WhatsApp<input name="phone" required></label>
+      <label>Phone / WhatsApp<input name="phone" required inputmode="tel" pattern="[0-9+ ]{7,20}" title="Digits only, e.g. +975 1791 4131"></label>
+      <input name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
       <label>Email<input name="email" type="email"></label>
       <label>Site location<input name="site" placeholder="e.g. Pasakha, Gelephu, Dagachhu"></label>
       <label>Notes<textarea name="msg" placeholder="Quantities, timeline, existing PLC/SCADA brand..."></textarea></label>
-      <div class="send"><button class="btn" data-via="mail" type="submit">${icon('mail')} Send by email</button><button class="btn gold" data-via="wa" type="submit">${icon('chat')} WhatsApp</button></div>
-      <p class="note">Prices are indicative and exclusive of taxes. A formal quotation follows a short technical review.</p>
+      <div class="send"><button class="btn" data-via="save" type="submit">${icon('check')} Submit enquiry</button><button class="btn line" data-via="wa" type="submit">${icon('chat')} Submit + WhatsApp</button><button class="btn line" data-via="mail" type="submit">${icon('mail')} Submit + Email</button></div>
+      <div class="result" aria-live="polite"></div>
+      <p class="note">Your enquiry is saved securely and ${C.founder} is notified at once. Prices are indicative and exclusive of taxes; a formal quotation follows a short technical review.</p>
     </form></div></div>`);
   const dr = $('#drawer');
   const open = () => { dr.classList.add('open'); paint(); };
@@ -66,23 +68,51 @@
     $$('[data-q]', L).forEach((x) => (x.onchange = () => { const b = get(); b[x.dataset.q] = Math.max(1, parseInt(x.value) || 1); put(b); }));
   }
 
-  function compose(f) {
-    const b = get(), ids = Object.keys(b).filter((k) => byId[k]);
-    let t = `Enquiry for ${C.name}\n\nName: ${f.name || ''}\nOrganisation: ${f.org || ''}\nPhone: ${f.phone || ''}\nEmail: ${f.email || ''}\nSite: ${f.site || ''}\n`;
+  const basketLines = () => { const b = get(); return Object.keys(b).filter((k) => byId[k]).map((k) => ({ it: byId[k], q: b[k] })); };
+  function compose(f, ref) {
+    const L = f.basket ? basketLines() : [];
+    let t = `Enquiry for ${C.name}${ref ? '\nReference: ' + ref : ''}\n\nName: ${f.name || ''}\nOrganisation: ${f.org || ''}\nPhone: ${f.phone || ''}\nEmail: ${f.email || ''}\nSite: ${f.site || ''}\n`;
     if (f.service) t += `Service: ${f.service}\n`;
-    if (ids.length) t += '\nItems:\n' + ids.map((k) => `- ${byId[k].name} (${byId[k].id}) x ${b[k]}  [${byId[k].price ? nu(byId[k].price) : 'on request'} ${byId[k].unit}]`).join('\n') + '\n';
+    if (L.length) t += '\nItems:\n' + L.map(({ it, q }) => `- ${it.name} (${it.id}) x ${q}  [${it.price ? nu(it.price) : 'on request'} ${it.unit}]`).join('\n') + '\n';
     if (f.msg) t += `\nMessage:\n${f.msg}\n`;
     return t + `\nSent from ${C.web}`;
   }
-  function send(form, via) {
+  async function store(f, via) {
+    const L = f.basket ? basketLines() : [];
+    const payload = { name: f.name, org: f.org, phone: f.phone, email: f.email, site: f.site, service: f.service || (L.length ? 'Marketplace' : 'General enquiry'), msg: f.msg,
+      items: L.map(({ it, q }) => `${it.id} ${it.name} x ${q} @ ${it.price ? nu(it.price) : 'on request'} ${it.unit}`).join('\n'),
+      total: L.reduce((s, { it, q }) => s + (it.price || 0) * q, 0), channel: via, page: location.pathname.split('/').pop() || 'index.html', website: f.website || '' };
+    if (!C.api) throw new Error('offline');
+    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 20000);
+    try {
+      const r = await fetch(C.api, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload), signal: ctl.signal });
+      const j = await r.json(); if (!j.ok) throw new Error(j.error || 'Could not save'); return j.ref;
+    } finally { clearTimeout(tm); }
+  }
+  async function send(form, via) {
     if (!form.reportValidity()) return;
-    const f = Object.fromEntries(new FormData(form).entries()), body = compose(f);
+    const f = Object.fromEntries(new FormData(form).entries()); f.basket = form.id === 'dform' || basketLines().length > 0;
+    const res = $('.result', form), btns = $$('button[type=submit]', form);
+    btns.forEach((b) => (b.disabled = true)); res.className = 'result busy'; res.textContent = 'Saving your enquiry...';
+    let ref = null;
+    try { ref = await store(f, via); }
+    catch (e) {
+      btns.forEach((b) => (b.disabled = false));
+      if (e.message !== 'offline' && e.name !== 'AbortError' && e.name !== 'TypeError') { res.className = 'result err'; res.textContent = e.message; return; }
+      res.className = 'result err'; res.textContent = `We could not reach our server. Please use WhatsApp or email, or call ${C.phone}.`;
+      if (via === 'save') return;
+    }
+    btns.forEach((b) => (b.disabled = false));
+    if (ref) {
+      res.className = 'result ok'; res.innerHTML = `<b>Thank you, ${f.name.split(' ')[0]}.</b> Your enquiry is saved. Reference <b>${ref}</b>. ${C.founder} will contact you within one working day.`;
+      if (f.basket) put({}); form.reset();
+    }
+    const body = compose(f, ref);
     if (via === 'wa') window.open(`https://wa.me/${C.whatsapp}?text=${encodeURIComponent(body)}`, '_blank', 'noopener');
-    else location.href = `mailto:${C.email}?subject=${encodeURIComponent('Enquiry: ' + (f.org || f.name || 'website'))}&body=${encodeURIComponent(body)}`;
-    toast(via === 'wa' ? 'Opening WhatsApp with your enquiry' : 'Opening your email app with the enquiry');
+    if (via === 'mail') location.href = `mailto:${C.email}?subject=${encodeURIComponent('Enquiry ' + (ref || '') + ': ' + (f.org || f.name || 'website'))}&body=${encodeURIComponent(body)}`;
   }
   $$('form[data-enquiry], #dform').forEach((fm) => {
-    let via = 'mail';
+    let via = 'save';
     $$('[data-via]', fm).forEach((b) => b.addEventListener('click', () => (via = b.dataset.via)));
     fm.addEventListener('submit', (e) => { e.preventDefault(); send(fm, via); });
   });
