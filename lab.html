@@ -1,0 +1,207 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live PLC Lab | Druk Logic & Engineering Solutions</title><meta name="description" content="Interactive PLC ladder-logic simulation with fault injection and an automated dry-run / FAT report.">
+<meta property="og:title" content="Live PLC Lab | Druk Logic & Engineering Solutions"><meta property="og:description" content="Interactive PLC ladder-logic simulation with fault injection and an automated dry-run / FAT report."><meta property="og:image" content="https://arunsanyasi2786.github.io/druklogic/assets/img/share.png">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="assets/img/icon.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Work+Sans:wght@300;400;500;600&family=Jomolhari&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="assets/css/lab.css">
+<link rel="stylesheet" href="assets/css/site.css"></head><body>
+<div class="topbar"><div class="wrap"><span class="dz" title="Druk">འབྲུག་</span>
+<a href="tel:+97517914131"><i data-i="phone" class="ico"></i>+975 1791 4131</a><a class="hide-s" href="tel:+97577979182">+975 7797 9182</a>
+<a href="mailto:sanyasiarun220@gmail.com"><i data-i="mail" class="ico"></i>sanyasiarun220@gmail.com</a><span class="hide-s"><i data-i="pin" class="ico"></i>Gelephu, Bhutan</span></div></div>
+<header class="site"><div class="wrap"><a class="logo" href="index.html" aria-label="Druk Logic & Engineering Solutions home"><img src="assets/img/logo.svg" alt="Druk Logic & Engineering Solutions"></a>
+<nav class="main"><a href="index.html" class="">Home</a><a href="index.html#services" class="">Services</a><a href="index.html#digital" class="">IIoT & AI</a><a href="marketplace.html" class="">Marketplace</a><a href="portfolio.html" class="">Portfolio</a><a href="lab.html" class="on">Live Lab</a><a href="index.html#contact" class="">Contact</a></nav>
+<div style="display:flex;gap:12px;align-items:center"><button class="basket-btn" data-open-basket><i data-i="bag" class="ico"></i><span class="hide-s">Enquiry</span><b class="basket-count" style="display:none">0</b></button>
+<button class="menu-btn" aria-label="Menu"><i data-i="menu" class="ico"></i></button></div></div></header><main><header class="sim-head">
+  <div class="wrap">
+    <span class="eyebrow" style="color:var(--accent)">Interactive demo · Simulation & dry-run testing</span>
+    <h1 style="font-size:clamp(1.9rem,4vw,2.8rem)">Tank & pump control — live PLC simulation</h1>
+    <p>This is how we test every program before it reaches site. The ladder logic below runs in your browser on a simulated tank. Operate it, inject faults, then run the automated dry-run test and print the FAT report. Try the “logic bug” switch to see the test catch an error.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="sim-grid">
+    <div class="panel">
+      <h3><i data-i="ladder"></i>Ladder logic <span class="note" style="margin-left:auto">scan <span id="scanNo">0</span> · green = energised</span></h3>
+      <div class="ladder-wrap"><svg class="ladder" id="ladder" style="width:100%;min-width:520px;height:auto"></svg></div>
+      <label class="toggle no-print" style="margin-top:12px;display:inline-flex"><input type="checkbox" id="bug"> Inject logic bug: delete the high-high level interlock in rung R3</label>
+    </div>
+
+    <div class="panel">
+      <h3><i data-i="monitor"></i>SCADA mimic</h3>
+      <svg viewBox="0 0 420 250" id="mimic" style="background:#0B1220;border-radius:10px;width:100%"></svg>
+      <div class="controls no-print">
+        <button class="pb start" data-mom="start">START</button>
+        <button class="pb stop" data-mom="stop">STOP</button>
+        <button class="pb reset" data-mom="reset">RESET</button>
+        <button class="pb estop" id="estopBtn">E-STOP</button>
+      </div>
+      <div class="slider no-print"><span>Outlet valve</span><input type="range" id="valve" min="0" max="100" value="30"><b id="valveV">30%</b></div>
+      <div class="controls no-print">
+        <label class="toggle"><input type="checkbox" data-fault="olTrip"> Motor overload trip</label>
+        <label class="toggle"><input type="checkbox" data-fault="suctionBlocked"> Suction blocked (dry-run)</label>
+        <label class="toggle"><input type="checkbox" data-fault="lshStuck"> High-level switch stuck</label>
+        <label class="toggle"><select id="speed" style="padding:2px 4px;width:auto"><option value="1">1×</option><option value="4">4×</option></select> speed</label>
+      </div>
+      <canvas id="trend" width="800" height="300"></canvas>
+    </div>
+  </div>
+
+  <div class="sim-grid" style="grid-template-columns:.8fr 1.2fr">
+    <div class="panel">
+      <h3><i data-i="cpu"></i>I/O & memory table</h3>
+      <div style="overflow-x:auto"><table class="io" id="io"></table></div>
+    </div>
+    <div class="panel" id="report">
+      <div class="print-only"><h2>Druk Logic &amp; Engineering Solutions</h2><p>Simulation Dry-Run / FAT Report — Tank & Pump Control (demo)</p></div>
+      <h3><i data-i="flask"></i>Automated dry-run / FAT
+        <span style="margin-left:auto;display:flex;gap:8px" class="no-print">
+          <button class="btn btn-dark" id="runTests" style="padding:9px 14px"><i data-i="play"></i>Run all tests</button>
+          <button class="btn" id="printBtn" style="padding:9px 14px;border-color:var(--line)"><i data-i="printer"></i>Print report</button>
+        </span></h3>
+      <p class="note" id="meta">Each test starts a fresh simulated plant, applies inputs and faults, and checks the PLC outputs — the same way we test your system.</p>
+      <div style="overflow-x:auto"><table class="test-table" id="tests"></table></div>
+      <p id="summary" style="font-weight:600;margin-top:12px"></p>
+      <div class="print-only"><br><p>Tested by: ____________________ &nbsp;&nbsp; Witnessed by (client): ____________________ &nbsp;&nbsp; Date: ____________</p></div>
+    </div>
+  </div>
+</main>
+
+</main><footer><div class="wrap"><div class="cols">
+<div><a class="logo" href="index.html"><img src="assets/img/logo-reverse.svg" alt="Druk Logic & Engineering Solutions" style="background:transparent"></a>
+<p style="color:#CDBBA7">Industrial automation engineered in Bhutan: PLC, SCADA, control panels, IIoT, digital twins and AI. Every program is simulated and dry-run tested before it reaches your plant.</p></div>
+<div><h4>Services</h4><a href="index.html#services">PLC &amp; SCADA engineering</a><a href="index.html#services">Control panels</a><a href="index.html#digital">IIoT, Digital Twin &amp; AI</a><a href="index.html#services">AMC &amp; training</a></div>
+<div><h4>Company</h4><a href="portfolio.html">Company portfolio</a><a href="marketplace.html">Marketplace</a><a href="lab.html">Live simulation lab</a><a href="index.html#founder">Founder</a></div>
+<div><h4>Contact</h4><a href="tel:+97517914131">+975 1791 4131</a><a href="tel:+97577979182">+975 7797 9182</a><a href="mailto:sanyasiarun220@gmail.com">sanyasiarun220@gmail.com</a><a href="https://www.google.com/maps/search/?api=1&query=Jangchub+Lam+Gelephu+Bhutan" target="_blank" rel="noopener">122 Jangchub Lam SE, Gelephu, Bhutan</a></div>
+</div><div class="base"><span>&copy; 2026 Druk Logic & Engineering Solutions  ·  Gelephu, Bhutan</span><span class="dz" style="color:var(--gold-l);font-size:1.1rem">འབྲུག་</span><span>Prices indicative, exclusive of taxes</span></div></div></footer>
+<script src="assets/js/data.js"></script><script src="assets/js/site.js"></script><script src="assets/js/lab-icons.js"></script>
+<script>
+/* ===================== PLC PROGRAM (data) ===================== */
+const ADDR={START:'I0.0',STOP_OK:'I0.1',LSL:'I0.2',LSH:'I0.3',OL_OK:'I0.4',ESTOP_OK:'I0.5',FS:'I0.6',LAHH:'I0.7',RESET:'I1.0',
+  ENABLE:'M0.0',PUMP_REQ:'M0.1',FAULT:'M0.2','T1.Q':'T1',PUMP:'Q0.0',ALARM:'Q0.1',RUN:'Q0.2'};
+const DESC={START:'Start push-button (NO)',STOP_OK:'Stop push-button (NC wired)',LSL:'Low level switch ≤ 20%',LSH:'High level switch ≥ 80%',OL_OK:'Motor overload healthy',
+  ESTOP_OK:'E-stop healthy (NC)',FS:'Discharge flow switch',LAHH:'High-high level switch ≥ 95%',RESET:'Fault reset push-button',
+  ENABLE:'System enabled (seal-in)',PUMP_REQ:'Fill demand',FAULT:'Dry-run fault latch','T1.Q':'No-flow timer done',PUMP:'Pump contactor',ALARM:'Alarm lamp',RUN:'Running lamp'};
+const C=(t,b)=>({t,b}); const PAR=(...br)=>({par:br});
+function program(bug){return [
+  {n:'R1',title:'System enable with seal-in',els:[PAR(C('NO','START'),C('NO','ENABLE')),C('NO','STOP_OK'),C('NO','ESTOP_OK')],out:{t:'COIL',b:'ENABLE'}},
+  {n:'R2',title:'Fill demand with hysteresis',els:[PAR(C('NO','LSL'),C('NO','PUMP_REQ')),C('NC','LSH')],out:{t:'COIL',b:'PUMP_REQ'}},
+  {n:'R3',title:'Pump run command + interlocks',els:[C('NO','ENABLE'),C('NO','PUMP_REQ'),C('NO','OL_OK')].concat(bug?[]:[C('NC','LAHH')]).concat([C('NC','FAULT')]),out:{t:'COIL',b:'PUMP'}},
+  {n:'R4',title:'Dry-run protection: no flow for 5 s',els:[C('NO','PUMP'),C('NC','FS')],out:{t:'TON',b:'T1',pt:5}},
+  {n:'R5',title:'Fault latch until reset',els:[PAR(C('NO','T1.Q'),C('NO','FAULT')),C('NC','RESET')],out:{t:'COIL',b:'FAULT'}},
+  {n:'R6',title:'Common alarm lamp',els:[PAR(C('NO','FAULT'),C('NC','OL_OK'),C('NO','LAHH'))],out:{t:'COIL',b:'ALARM'}},
+  {n:'R7',title:'Running indication',els:[C('NO','PUMP')],out:{t:'COIL',b:'RUN'}},
+];}
+
+/* ===================== SIMULATED PLANT + PLC ===================== */
+class Sim{
+  constructor(o={}){this.level=o.level??50;this.valve=o.valve??30;this.f={olTrip:false,suctionBlocked:false,lshStuck:false};
+    this.pb={start:false,stop:false,reset:false,estop:false};this.b={};this.T1={acc:0};this.prog=program(!!o.bug);this.t=0;this.scans=0;this.maxLevel=this.level;this.trace=[];}
+  inputs(){const b=this.b,L=this.level;b.START=this.pb.start;b.STOP_OK=!this.pb.stop;b.ESTOP_OK=!this.pb.estop;b.RESET=this.pb.reset;
+    b.LSL=L<=20;b.LSH=L>=80&&!this.f.lshStuck;b.LAHH=L>=95;b.OL_OK=!this.f.olTrip;b.FS=!!b.PUMP&&!this.f.suctionBlocked;}
+  scan(dt){this.inputs();const b=this.b;this.view=[];
+    for(const r of this.prog){let p=true;const ev=[];
+      for(const e of r.els){if(e.par){const st=e.par.map(c=>this.contact(c));const out=p&&st.some(Boolean);ev.push({par:true,pin:p,st,out});p=out;}
+        else{const c=this.contact(e);ev.push({pin:p,c,out:p&&c});p=p&&c;}}
+      if(r.out.t==='COIL')b[r.out.b]=p;
+      else{this.T1.acc=p?Math.min(r.out.pt,this.T1.acc+dt):0;b['T1.Q']=p&&this.T1.acc>=r.out.pt;}
+      this.view.push({ev,pout:p});}
+    this.scans++;}
+  contact(c){const v=!!this.b[c.b];return c.t==='NO'?v:!v;}
+  plant(dt){const inflow=this.b.PUMP&&!this.f.suctionBlocked?6:0;const out=this.valve*0.03*Math.min(1,this.level/5);
+    this.level=Math.max(0,Math.min(100,this.level+(inflow-out)*dt));this.maxLevel=Math.max(this.maxLevel,this.level);this.t+=dt;}
+  step(dt){this.scan(dt);this.plant(dt);}
+  run(sec,until){const dt=0.1;for(let i=0;i<sec/dt;i++){this.step(dt);if(until&&until(this))return true;}return false;}
+  press(k){this.pb[k]=true;this.run(0.3);this.pb[k]=false;this.run(0.1);}
+}
+
+/* ===================== LADDER RENDERER ===================== */
+const ON='#22C55E',OFF='#475569',TXT='#CBD5E1',DIM='#64748B',ACC='#F2B705';
+function renderLadder(sim){const W=640,X0=20,X1=W-20,SL=86;let y=22,s='';
+  sim.prog.forEach((r,ri)=>{const v=sim.view?sim.view[ri]:null;const maxBr=Math.max(1,...r.els.map(e=>e.par?e.par.length:1));
+    s+=`<text x="${X0+6}" y="${y}" fill="${ACC}" font-weight="700">${r.n}</text><text x="${X0+30}" y="${y}" fill="${DIM}">${r.title}</text>`;const yc=y+34;let x=X0;
+    r.els.forEach((e,i)=>{const ev=v?v.ev[i]:{};
+      if(e.par){e.par.forEach((c,k)=>{const yy=yc+k*62;const closed=ev.st?ev.st[k]:false;const pw=ev.pin&&closed;
+          s+=contact(x,yy,c,closed,ev.pin,pw);});
+        const h=(e.par.length-1)*62;s+=`<path d="M${x} ${yc} V${yc+h}" stroke="${ev.pin?ON:OFF}" stroke-width="2"/><path d="M${x+SL} ${yc} V${yc+h}" stroke="${ev.out?ON:OFF}" stroke-width="2"/>`;}
+      else s+=contact(x,yc,e,ev.c,ev.pin,ev.out);
+      x+=SL;});
+    const p=v?v.pout:false;const cx=X1-70;
+    s+=`<path d="M${x} ${yc} H${cx-16}" stroke="${p?ON:OFF}" stroke-width="2"/>`;
+    if(r.out.t==='COIL'){s+=`<path d="M${cx-8} ${yc-13} q-9 13 0 26 M${cx+8} ${yc-13} q9 13 0 26" fill="none" stroke="${p?ON:OFF}" stroke-width="2.5"/>`+
+        `<text x="${cx}" y="${yc-20}" fill="${TXT}" text-anchor="middle">${r.out.b}</text><text x="${cx}" y="${yc+28}" fill="${DIM}" text-anchor="middle">${ADDR[r.out.b]}</text>`+
+        `<path d="M${cx+16} ${yc} H${X1}" stroke="${p?ON:OFF}" stroke-width="2"/>`;}
+    else{const acc=sim.T1.acc;s+=`<rect x="${cx-16}" y="${yc-18}" width="64" height="40" rx="4" fill="#0F172A" stroke="${p?ON:OFF}" stroke-width="2"/>`+
+        `<text x="${cx+16}" y="${yc-4}" fill="${TXT}" text-anchor="middle">TON T1</text><text x="${cx+16}" y="${yc+12}" fill="${p?ON:DIM}" text-anchor="middle">${acc.toFixed(1)}/${r.out.pt}s</text>`;}
+    y+=Math.max(88,62*maxBr+36);});
+  s=`<path d="M${X0} 10 V${y-20}" stroke="${ON}" stroke-width="3"/><path d="M${X1} 10 V${y-20}" stroke="${OFF}" stroke-width="3"/>`+s;
+  const svg=document.getElementById('ladder');svg.setAttribute('viewBox',`0 0 ${W} ${y-10}`);svg.innerHTML=s;}
+function contact(x,y,c,closed,pin,pout){const a=x+30,b=x+50;let s=`<path d="M${x} ${y} H${a}" stroke="${pin?ON:OFF}" stroke-width="2"/><path d="M${b} ${y} H${x+86}" stroke="${pout?ON:OFF}" stroke-width="2"/>`;
+  const col=closed?ON:OFF;s+=`<path d="M${a} ${y-12} V${y+12} M${b} ${y-12} V${y+12}" stroke="${col}" stroke-width="2.5"/>`;
+  if(c.t==='NC')s+=`<path d="M${a-3} ${y+11} L${b+3} ${y-11}" stroke="${col}" stroke-width="2"/>`;
+  return s+`<text x="${x+40}" y="${y-17}" fill="${TXT}" text-anchor="middle">${c.b}</text><text x="${x+40}" y="${y+26}" fill="${DIM}" text-anchor="middle">${ADDR[c.b]}</text>`;}
+
+/* ===================== SCADA MIMIC ===================== */
+function renderMimic(sim){const b=sim.b,L=sim.level,h=170*L/100;const pumpCol=b.PUMP?(sim.f.suctionBlocked?'#F59E0B':'#22C55E'):'#64748B';
+  const sw=(y,lab,st)=>`<path d="M150 ${y} H168" stroke="${st?'#22C55E':'#64748B'}" stroke-width="3"/><circle cx="172" cy="${y}" r="4" fill="${st?'#22C55E':'#334155'}"/><text x="180" y="${y+4}" fill="#94A3B8" font-size="10" font-family="JetBrains Mono">${lab}</text>`;
+  let s=`<text x="20" y="20" fill="#94A3B8" font-size="11" font-family="JetBrains Mono">TANK T-101</text>
+  <rect x="40" y="30" width="110" height="174" rx="6" fill="none" stroke="#94A3B8" stroke-width="2"/>
+  <rect x="42" y="${202-h}" width="106" height="${h}" fill="#2F6FDB" opacity=".8"/>
+  <text x="95" y="120" fill="#fff" font-size="22" font-family="JetBrains Mono" text-anchor="middle">${L.toFixed(1)}%</text>
+  ${sw(202-170*0.95,'LAHH 95%',b.LAHH)}${sw(202-170*0.80,'LSH 80%'+(sim.f.lshStuck?' STUCK':''),b.LSH)}${sw(202-170*0.20,'LSL 20%',b.LSL)}
+  <path d="M10 60 H40" stroke="#94A3B8" stroke-width="5"/><text x="8" y="52" fill="#94A3B8" font-size="9" font-family="JetBrains Mono">IN</text>
+  <path d="M150 190 H250" stroke="#94A3B8" stroke-width="5"/>
+  <polygon points="250,180 270,190 250,200" fill="${sim.valve>0?'#22C55E':'#64748B'}"/><polygon points="290,180 270,190 290,200" fill="${sim.valve>0?'#22C55E':'#64748B'}"/>
+  <text x="270" y="172" fill="#94A3B8" font-size="10" font-family="JetBrains Mono" text-anchor="middle">XV-101 ${sim.valve}%</text>
+  <path d="M290 190 H410" stroke="#94A3B8" stroke-width="5"/><text x="400" y="182" fill="#94A3B8" font-size="9" font-family="JetBrains Mono" text-anchor="end">OUT</text>
+  <circle cx="330" cy="70" r="24" fill="none" stroke="${pumpCol}" stroke-width="3"/><polygon points="320,58 344,70 320,82" fill="${pumpCol}"/>
+  <text x="330" y="112" fill="#94A3B8" font-size="10" font-family="JetBrains Mono" text-anchor="middle">P-101 ${b.PUMP?'RUN':'STOP'}</text>
+  <path d="M306 70 H250 V30 H10" stroke="#475569" stroke-width="3" fill="none" stroke-dasharray="${b.FS?'0':'6 4'}"/>
+  <text x="250" y="24" fill="${b.FS?'#22C55E':'#64748B'}" font-size="9" font-family="JetBrains Mono">FS ${b.FS?'FLOW':'NO FLOW'}</text>`;
+  const al=[];if(b.FAULT)al.push('DRY-RUN FAULT — reset required');if(!b.OL_OK)al.push('MOTOR OVERLOAD TRIP');if(b.LAHH)al.push('TANK LEVEL HIGH-HIGH');if(!b.ESTOP_OK)al.push('EMERGENCY STOP ACTIVE');
+  s+=`<rect x="190" y="210" width="222" height="34" rx="6" fill="${al.length?'#7F1D1D':'#14532D'}"/><text x="200" y="231" fill="#fff" font-size="10.5" font-family="JetBrains Mono">${al.length?al[0]:(b.ENABLE?'SYSTEM ENABLED · AUTO':'SYSTEM STOPPED — press START')}</text>`;
+  document.getElementById('mimic').innerHTML=s;}
+
+/* ===================== I/O TABLE + TREND ===================== */
+function renderIO(sim){const rows=Object.keys(ADDR).map(k=>{const on=!!sim.b[k];const al=(k==='ALARM'||k==='FAULT')&&on;
+  return `<tr><td>${ADDR[k]}</td><td>${k}</td><td style="font-family:var(--font)">${DESC[k]}</td><td><span class="led ${al?'alarm':on?'on':''}"></span></td></tr>`;}).join('');
+  document.getElementById('io').innerHTML='<tr><th>Addr</th><th>Tag</th><th>Description</th><th>State</th></tr>'+rows;}
+const hist=[];function renderTrend(sim){const cv=document.getElementById('trend'),g=cv.getContext('2d'),W=cv.width,H=cv.height;
+  hist.push([sim.level,!!sim.b.PUMP]);if(hist.length>600)hist.shift();g.clearRect(0,0,W,H);
+  g.strokeStyle='rgba(148,163,184,.18)';g.lineWidth=1;[20,80,95].forEach(v=>{const y=H-20-(H-40)*v/100;g.beginPath();g.moveTo(40,y);g.lineTo(W-10,y);g.stroke();g.fillStyle='#64748B';g.font='18px JetBrains Mono';g.fillText(v+'%',2,y+6);});
+  const dx=(W-50)/600;hist.forEach((p,i)=>{if(p[1]){g.fillStyle='rgba(34,197,94,.18)';g.fillRect(40+i*dx,H-14,dx+1,10);}});
+  g.strokeStyle='#F2B705';g.lineWidth=3;g.beginPath();hist.forEach((p,i)=>{const x=40+i*dx,y=H-20-(H-40)*p[0]/100;i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();
+  g.fillStyle='#94A3B8';g.font='18px JetBrains Mono';g.fillText('LEVEL TREND (last 60 s) · green band = pump running',44,24);}
+
+/* ===================== LIVE LOOP ===================== */
+let live=new Sim({level:50});
+function frame(){const sp=+document.getElementById('speed').value;for(let i=0;i<sp;i++)live.step(0.1);
+  renderLadder(live);renderMimic(live);renderIO(live);renderTrend(live);document.getElementById('scanNo').textContent=live.scans;}
+setInterval(frame,100);
+document.querySelectorAll('[data-mom]').forEach(bt=>bt.addEventListener('click',()=>{const k=bt.dataset.mom;live.pb[k]=true;bt.classList.add('on');setTimeout(()=>{live.pb[k]=false;bt.classList.remove('on');},400);}));
+document.getElementById('estopBtn').addEventListener('click',e=>{live.pb.estop=!live.pb.estop;e.target.classList.toggle('on',live.pb.estop);e.target.textContent=live.pb.estop?'RELEASE E-STOP':'E-STOP';});
+document.querySelectorAll('[data-fault]').forEach(cb=>cb.addEventListener('change',()=>live.f[cb.dataset.fault]=cb.checked));
+document.getElementById('valve').addEventListener('input',e=>{live.valve=+e.target.value;document.getElementById('valveV').textContent=e.target.value+'%';});
+document.getElementById('bug').addEventListener('change',e=>{live.prog=program(e.target.checked);document.getElementById('tests').innerHTML='';document.getElementById('summary').textContent='Logic changed — re-run the dry-run tests.';});
+
+/* ===================== AUTOMATED DRY-RUN / FAT ===================== */
+const TESTS=[
+ {id:'T01',name:'Pump stays off until the system is started',exp:'PUMP = 0 with low level and no START',fn:(s)=>{s.level=15;s.run(2);return [!s.b.PUMP,`PUMP=${+!!s.b.PUMP}`];}},
+ {id:'T02',name:'START enables the system; pump fills on low level',exp:'ENABLE = 1, PUMP = 1',fn:(s)=>{s.level=15;s.press('start');s.run(1);return [s.b.ENABLE&&s.b.PUMP,`ENABLE=${+!!s.b.ENABLE} PUMP=${+!!s.b.PUMP}`];}},
+ {id:'T03',name:'Pump stops at high level switch (LSH 80%)',exp:'PUMP = 0, level 79–86%',fn:(s)=>{s.level=15;s.press('start');s.run(60,x=>x.level>=80);s.run(1);return [!s.b.PUMP&&s.level>=79&&s.level<=86,`PUMP=${+!!s.b.PUMP} level=${s.level.toFixed(1)}%`];}},
+ {id:'T04',name:'Pump restarts at low level switch (LSL 20%)',exp:'PUMP = 1 when level ≤ 20%',fn:(s)=>{s.level=60;s.valve=100;s.press('start');const ok=s.run(120,x=>x.b.PUMP);return [ok&&s.level<=20.5,`PUMP=${+!!s.b.PUMP} at level=${s.level.toFixed(1)}%`];}},
+ {id:'T05',name:'STOP drops the pump immediately',exp:'PUMP = 0, ENABLE = 0 within 0.5 s',fn:(s)=>{s.level=15;s.press('start');s.run(1);s.press('stop');return [!s.b.PUMP&&!s.b.ENABLE,`PUMP=${+!!s.b.PUMP} ENABLE=${+!!s.b.ENABLE}`];}},
+ {id:'T06',name:'E-STOP stops pump; no auto-restart after release',exp:'PUMP = 0 after release until START',fn:(s)=>{s.level=15;s.press('start');s.run(1);s.pb.estop=true;s.run(0.5);const a=!s.b.PUMP;s.pb.estop=false;s.run(1);const b=!s.b.PUMP;s.press('start');s.run(0.5);return [a&&b&&s.b.PUMP,`stopped=${+a} held=${+b} restart=${+!!s.b.PUMP}`];}},
+ {id:'T07',name:'Motor overload trip stops pump and raises alarm',exp:'PUMP = 0, ALARM = 1',fn:(s)=>{s.level=15;s.press('start');s.run(1);s.f.olTrip=true;s.run(0.5);return [!s.b.PUMP&&s.b.ALARM,`PUMP=${+!!s.b.PUMP} ALARM=${+!!s.b.ALARM}`];}},
+ {id:'T08',name:'Dry-run protection: no flow for 5 s trips the pump',exp:'Running at 4 s; FAULT = 1, PUMP = 0 after 5 s',fn:(s)=>{s.level=15;s.f.suctionBlocked=true;s.press('start');s.run(3.5);const a=s.b.PUMP&&!s.b.FAULT;s.run(2);return [a&&s.b.FAULT&&!s.b.PUMP&&s.b.ALARM,`at4s PUMP=${+a} → FAULT=${+!!s.b.FAULT} PUMP=${+!!s.b.PUMP}`];}},
+ {id:'T09',name:'Fault stays latched until RESET',exp:'FAULT = 1 after cause cleared; 0 after RESET',fn:(s)=>{s.level=15;s.f.suctionBlocked=true;s.press('start');s.run(6);s.f.suctionBlocked=false;s.run(2);const a=s.b.FAULT;s.press('reset');return [a&&!s.b.FAULT,`latched=${+!!a} after reset=${+!!s.b.FAULT}`];}},
+ {id:'T10',name:'Failed high-level switch cannot overfill the tank',exp:'Max level < 97%, PUMP = 0, ALARM = 1',fn:(s)=>{s.level=15;s.valve=0;s.f.lshStuck=true;s.press('start');s.run(40);return [s.maxLevel<97&&!s.b.PUMP&&s.b.ALARM,`max=${s.maxLevel.toFixed(1)}% PUMP=${+!!s.b.PUMP} ALARM=${+!!s.b.ALARM}`];}},
+];
+function checksum(o){let h=2166136261;const t=JSON.stringify(o);for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(16).toUpperCase().padStart(8,'0');}
+document.getElementById('runTests').addEventListener('click',async()=>{const bug=document.getElementById('bug').checked;const tb=document.getElementById('tests');
+  tb.innerHTML='<tr><th>ID</th><th>Test</th><th>Expected</th><th>Actual</th><th>Result</th></tr>'+TESTS.map(t=>`<tr id="${t.id}"><td>${t.id}</td><td>${t.name}</td><td class="note">${t.exp}</td><td class="note">—</td><td><span class="badge">QUEUED</span></td></tr>`).join('');
+  document.getElementById('meta').textContent=`Program R1–R7 · checksum ${checksum(program(bug))} · run ${new Date().toLocaleString('en-GB')} · simulated time step 100 ms`;
+  let pass=0;for(const t of TESTS){const row=document.getElementById(t.id);row.cells[4].innerHTML='<span class="badge run">RUNNING</span>';await new Promise(r=>setTimeout(r,220));
+    const [ok,act]=t.fn(new Sim({level:50,bug}));if(ok)pass++;row.cells[3].textContent=act;row.cells[4].innerHTML=`<span class="badge ${ok?'pass':'fail'}">${ok?'PASS':'FAIL'}</span>`;}
+  const s=document.getElementById('summary');s.textContent=`${pass} / ${TESTS.length} tests passed — ${pass===TESTS.length?'program accepted for site (FAT passed).':'program NOT accepted: fix the failed tests before site.'}`;s.style.color=pass===TESTS.length?'var(--ok)':'var(--bad)';});
+document.getElementById('printBtn').addEventListener('click',()=>window.print());
+</script>
+</body></html>
