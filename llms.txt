@@ -9,7 +9,9 @@ The office is at 122 Jangchub Lam SE, Gelephu, Bhutan. For project enquiries, ca
 ## Services and contact
 
 - [Company overview and industrial automation services](https://druk-logix.github.io/druklogic/)
-- [PLC programming and SCADA services in Bhutan](https://druk-logix.github.io/druklogic/plc-scada-bhutan.html)
+- [PLC and SCADA services overview](https://druk-logix.github.io/druklogic/plc-scada-bhutan.html)
+- [PLC programming, retrofits and commissioning in Bhutan](https://druk-logix.github.io/druklogic/plc-programming-bhutan.html)
+- [SCADA and HMI integration in Bhutan](https://druk-logix.github.io/druklogic/scada-integration-bhutan.html)
 - [Contact and request a quotation](https://druk-logix.github.io/druklogic/#contact)
 
 ## Portfolio and learning resources
