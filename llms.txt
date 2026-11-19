@@ -1,0 +1,19 @@
+# Druk Logic & Engineering Solutions
+
+> Druk Logic is an industrial automation company in Gelephu, Bhutan. It provides PLC programming and upgrades, SCADA and HMI integration, control panel engineering, and testing and commissioning for industrial sites across Bhutan.
+
+Druk Logic works on new installations and upgrades in hydropower, manufacturing, and water systems. Its services include documenting control logic, integrating operator screens and alarms, testing with simulated inputs and faults before site work, and recording factory and site acceptance test results. It also offers industrial remote monitoring, virtual commissioning, and PLC and SCADA training.
+
+The office is at 122 Jangchub Lam SE, Gelephu, Bhutan. For project enquiries, call +975 1791 4131 or email sanyasiarun220@gmail.com.
+
+## Services and contact
+
+- [Company overview and industrial automation services](https://druk-logix.github.io/druklogic/)
+- [PLC programming and SCADA services in Bhutan](https://druk-logix.github.io/druklogic/plc-scada-bhutan.html)
+- [Contact and request a quotation](https://druk-logix.github.io/druklogic/#contact)
+
+## Portfolio and learning resources
+
+- [Automation portfolio with founder experience and in-house demonstrations](https://druk-logix.github.io/druklogic/portfolio.html)
+- [Interactive tank and pump PLC simulation with a factory acceptance test report](https://druk-logix.github.io/druklogic/lab.html)
+- [Hardware, automation packages and training catalogue](https://druk-logix.github.io/druklogic/marketplace.html)
